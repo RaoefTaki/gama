@@ -320,5 +320,8 @@ def evaluator_daemon(
     except Exception as e:
         # There are no plans currently for recovering from any exception:
         print(f"Stopping daemon:{type(e)}:{str(e)}")
+        import traceback
+
+        traceback.print_exc()
     # Not sure if required: give main process time to process log message.
     time.sleep(5)
