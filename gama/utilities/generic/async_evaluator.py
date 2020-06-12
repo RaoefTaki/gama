@@ -211,12 +211,14 @@ class AsyncEvaluator:
         mp_process.start()
         subprocess = psutil.Process(mp_process.pid)
         self._processes.append(subprocess)
+        log.info(f"Started {subprocess.pid} ({len(self._processes)} subprocesses).")
         return subprocess
 
     def _stop_worker_process(self, process: psutil.Process):
         """ Terminate a new worker node and remove it from the process pool. """
         process.terminate()
         self._processes.remove(process)
+        log.info(f"Terminated {process.pid} ({len(self._processes)} subprocesses).")
 
     def _control_memory_usage(self, threshold=0.05):
         """ Dynamically restarts or kills processes to adhere to memory constraints. """
