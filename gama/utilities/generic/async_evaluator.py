@@ -24,6 +24,7 @@ import traceback
 import uuid
 from typing import Optional, Callable, Dict, List
 import gc
+import struct
 
 try:
     import resource
@@ -312,14 +313,15 @@ def evaluator_daemon(
                         result.error = "MemoryError"
                         gc.collect()
                 output_queue.put(future)
-            except MemoryError:
+            except (MemoryError, struct.error) as e:
+                print(f"{type(e)} in {os.getpid()}")
                 future.result = None
-                future.exception = "ProcessMemoryError"
+                future.exception = str(type(e))
                 gc.collect()
                 output_queue.put(future)
     except Exception as e:
         # There are no plans currently for recovering from any exception:
-        print(f"Stopping daemon:{type(e)}:{str(e)}")
+        print(f"Stopping daemon {os.getpid()}:{type(e)}:{str(e)}")
         import traceback
 
         traceback.print_exc()
