@@ -355,11 +355,13 @@ def evaluator_daemon(
                 # gc.collect()
                 print(future.result.individual.pipeline_str())
                 size, bytype = getsize(future)
-                print(f"Pickling object of size: {size / 2**20:.2f}mb")
-                size, bytype = getsize(future.result._predictions)
-                print(f"Predictions object of size: {size / 2**20:.2f}mb")
-                size, bytype = getsize(future.result._estimators)
-                print(f"Estimators object of size: {size / 2**20:.2f}mb")
+                print(f"Pickling Future of size: {size / 2**20:.2f}mb")
+                for att in vars(future):
+                    size, bytype = getsize(getattr(future, att))
+                    print(f"Pickling Future.{att} of size: {size / 2**20:.2f}mb")
+                for att in vars(future.result):
+                    size, bytype = getsize(getattr(future.result, att))
+                    print(f"Pickling future.result.{att} of size: {size / 2**20:.2f}mb")
                 print("")
                 # print(list(sorted(bytype, key=lambda x:x[0]))[-5:])
                 # future.result._predictions = p
