@@ -27,10 +27,41 @@ import traceback
 from typing import Optional, Callable, Dict, List
 import uuid
 
+# https://stackoverflow.com/questions/449560/
+
+import sys
+from types import ModuleType, FunctionType
+from gc import get_referents
+
 try:
     import resource
 except ModuleNotFoundError:
     resource = None  # type: ignore
+
+# Custom objects know their class.
+# Function objects seem to know way too much, including modules.
+# Exclude modules as well.
+BLACKLIST = type, ModuleType, FunctionType
+
+
+def getsize(obj):
+    """sum size of object & members."""
+    if isinstance(obj, BLACKLIST):
+        raise TypeError("getsize() does not take argument of type: " + str(type(obj)))
+    seen_ids = set()
+    size = 0
+    objects = [obj]
+    bytype = []
+    while objects:
+        need_referents = []
+        for obj in objects:
+            if not isinstance(obj, BLACKLIST) and id(obj) not in seen_ids:
+                seen_ids.add(id(obj))
+                size += sys.getsizeof(obj)
+                need_referents.append(obj)
+                bytype.append((sys.getsizeof(obj), type(obj)))
+        objects = get_referents(*need_referents)
+    return size, bytype
 
 
 log = logging.getLogger(__name__)
@@ -318,6 +349,20 @@ def evaluator_daemon(
                         # Can't pickle MemoryErrors. Should work around this later.
                         result.error = "MemoryError"
                         gc.collect()
+                # size, bytype = getsize(future)
+                # p = future.result._predictions
+                # future.result._predictions = None
+                # gc.collect()
+                print(future.result.individual.pipeline_str())
+                size, bytype = getsize(future)
+                print(f"Pickling object of size: {size / 2**20:.2f}mb")
+                size, bytype = getsize(future.result._predictions)
+                print(f"Predictions object of size: {size / 2**20:.2f}mb")
+                size, bytype = getsize(future.result._estimators)
+                print(f"Estimators object of size: {size / 2**20:.2f}mb")
+                print("")
+                # print(list(sorted(bytype, key=lambda x:x[0]))[-5:])
+                # future.result._predictions = p
                 output_queue.put(future)
             except (MemoryError, struct.error) as e:
                 future.result = None
