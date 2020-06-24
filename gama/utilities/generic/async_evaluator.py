@@ -339,6 +339,7 @@ def evaluator_daemon(
         while True:
             try:
                 future = input_queue.get()
+                print(f"{os.getpid()} eval {future.args[0].pipeline_str()}")
                 future.execute(default_parameters)
                 if future.result:
                     if isinstance(future.result, tuple):
