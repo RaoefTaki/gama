@@ -282,7 +282,7 @@ class AsyncEvaluator:
         if not self._logfile:
             return
         mem_by_pid = self._get_memory_usage()
-        mem_str = ",".join([f"{pid},{mem_mb}" for (pid, mem_mb) in mem_by_pid])
+        mem_str = ",".join([f"{proc.pid},{mem_mb}" for (proc, mem_mb) in mem_by_pid])
         timestamp = datetime.datetime.now().isoformat()
 
         with open(self._logfile, "a") as memory_log:
@@ -292,7 +292,7 @@ class AsyncEvaluator:
         processes = [self._main_process] + self._processes
         for process in processes:
             try:
-                yield process.pid, process.memory_info()[0] / (2 ** 20)
+                yield process, process.memory_info()[0] / (2 ** 20)
             except NoSuchProcess:
                 # can never be main process so must be in self._processes
                 self._processes = [p for p in self._processes if p.pid != process.pid]
