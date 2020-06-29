@@ -28,6 +28,8 @@ import traceback
 from typing import Optional, Callable, Dict, List
 import uuid
 
+from psutil import NoSuchProcess
+
 try:
     import resource
 except ModuleNotFoundError:
@@ -249,9 +251,8 @@ class AsyncEvaluator:
         # ! Like the rest of this module, I hate to use custom code with this,
         # in particular there is a risk that terminating the process might leave
         # the multiprocess queue broken.
-        processes = [self._main_process] + self._processes
-        mem_proc = [(p.memory_info()[0] / (2 ** 20), p) for p in processes]
-        if sum(map(lambda x: x[0], mem_proc)) > self._memory_limit_mb:
+        mem_by_pid = list(self._get_memory_usage())
+        if sum(map(lambda x: x[1], mem_by_pid)) > self._memory_limit_mb:
             log.info(
                 f"GAMA exceeded memory usage "
                 f"({self._mem_violations}, {self._mem_behaved})."
@@ -259,7 +260,7 @@ class AsyncEvaluator:
             self._log_memory_usage()
             self._mem_violations += 1
             # Find the process with the most memory usage, that is not the main process
-            _, proc = max(mem_proc[1:], key=lambda t: t[0])
+            proc, _ = max(mem_by_pid[1:], key=lambda t: t[1])
             n_evaluations = self._mem_violations + self._mem_behaved
             fail_ratio = self._mem_violations / n_evaluations
             if fail_ratio < threshold or len(self._processes) == 1:
@@ -280,13 +281,22 @@ class AsyncEvaluator:
     def _log_memory_usage(self):
         if not self._logfile:
             return
-        processes = [self._main_process] + self._processes
-        mem_by_pid = [(p.pid, p.memory_info()[0] / (2 ** 20)) for p in processes]
+        mem_by_pid = self._get_memory_usage()
         mem_str = ",".join([f"{pid},{mem_mb}" for (pid, mem_mb) in mem_by_pid])
         timestamp = datetime.datetime.now().isoformat()
 
         with open(self._logfile, "a") as memory_log:
             memory_log.write(f"{timestamp},{mem_str}\n")
+
+    def _get_memory_usage(self):
+        processes = [self._main_process] + self._processes
+        for process in processes:
+            try:
+                yield process.pid, process.memory_info()[0] / (2 ** 20)
+            except NoSuchProcess:
+                # can never be main process so must be in self._processes
+                self._processes = [p for p in self._processes if p.pid != process.pid]
+                self._start_worker_process()
 
 
 def evaluator_daemon(
