@@ -19,6 +19,7 @@ import gc
 import logging
 import multiprocessing
 import os
+
 import psutil
 import queue
 import struct
@@ -205,6 +206,9 @@ class AsyncEvaluator:
             except queue.Empty:
                 time.sleep(poll_time)
                 continue
+            except multiprocessing.managers.RemoteError as e:
+                log.warning(f"Encountered RemoteError {str(e)}", exc_info=True)
+                time.sleep(poll_time)
 
     def _start_worker_process(self) -> psutil.Process:
         """ Start a new worker node and add it to the process pool. """
