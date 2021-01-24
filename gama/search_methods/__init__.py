@@ -14,6 +14,7 @@ from gama.search_methods.asha import AsynchronousSuccessiveHalving
 from gama.search_methods.async_ea import AsyncEA
 from gama.search_methods.random_search import RandomSearch
 from gama.search_methods.base_search import _check_base_search_hyperparameters
+from gama.search_methods.differential_evolution import DifferentialEvolution
 
 
-__all__ = ["AsynchronousSuccessiveHalving", "AsyncEA", "RandomSearch"]
+__all__ = ["AsynchronousSuccessiveHalving", "AsyncEA", "RandomSearch", "DifferentialEvolution"]

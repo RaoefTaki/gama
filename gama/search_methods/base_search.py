@@ -73,6 +73,13 @@ class BaseSearch(ABC):
         # updates self.hyperparameters defaults
         raise NotImplementedError("Must be implemented by child class.")
 
+    def get_is_multi_objective(self):
+        """
+        Returns whether the search uses multiple objectives to find the optimal pipeline. By default this is True.
+        Should be overridden in derived classes if desired to return false.
+        """
+        return True
+
     def search(self, operations: OperatorSet, start_candidates: List[Individual]):
         """ Execute search as configured.
 

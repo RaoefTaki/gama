@@ -269,7 +269,7 @@ class Gama(ABC):
                 max_length=max_pipeline_length,
             ),
             mate=partial(random_crossover, max_length=max_pipeline_length),
-            create_from_population=partial(create_from_population, cxpb=0.2, mutpb=0.8),
+            create_from_population=partial(create_from_population, cxpb=0.2, mutpb=0.8, is_multi_objective=self._search_method.get_is_multi_objective()),
             create_new=partial(
                 create_random_expression,
                 primitive_set=self._pset,
@@ -570,7 +570,7 @@ class Gama(ABC):
 
         self._operator_set.evaluate = partial(
             gama.genetic_programming.compilers.scikitlearn.evaluate_individual,
-            # evaluate_pipeline=evaluate_pipeline,
+            evaluate_pipeline=evaluate_pipeline,
             timeout=self._max_eval_time,
             deadline=deadline,
             add_length_to_score=self._regularize_length,
@@ -578,8 +578,10 @@ class Gama(ABC):
 
         try:
             with stopit.ThreadingTimeout(timeout):
-                self._search_method.dynamic_defaults(self._x, self._y, timeout)
-                self._search_method.search(self._operator_set, start_candidates=pop)
+                # Set the dynamic default values
+                self._search_method.dynamic_defaults(x=self._x, y=self._y, time_limit=timeout)
+                # Conduct the search
+                self._search_method.search(operations=self._operator_set, start_candidates=pop)
         except KeyboardInterrupt:
             log.info("Search phase terminated because of Keyboard Interrupt.")
 
@@ -667,3 +669,9 @@ class Gama(ABC):
             Function to call when a pipeline is evaluated, return values are ignored.
         """
         self._subscribers["evaluation_completed"].append(callback)
+
+    def set_search_method(self, search_method):
+        self._search_method = search_method
+
+    def get_pipeline_components(self):
+        return self._pset

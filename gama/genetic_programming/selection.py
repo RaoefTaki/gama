@@ -15,10 +15,14 @@ def create_from_population(
     n: int,
     cxpb: float,
     mutpb: float,
+    is_multi_objective: bool = True
 ) -> List[Individual]:
     """ Creates n new individuals based on the population. """
     offspring = []
-    metrics = [lambda ind: ind.fitness.values[0], lambda ind: ind.fitness.values[1]]
+    if is_multi_objective:
+        metrics = [lambda ind: ind.fitness.values[0], lambda ind: ind.fitness.values[1]]
+    else:
+        metrics = [lambda ind: ind.fitness.values[0]]
     parent_pairs = nsga2_select(pop, n, metrics)
     for (ind1, ind2) in parent_pairs:
         if random.random() < cxpb and len(_valid_crossover_functions(ind1, ind2)) > 0:

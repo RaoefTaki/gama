@@ -98,3 +98,6 @@ class OperatorSet:
 
     def eliminate(self, *args, **kwargs):
         return self._eliminate(*args, **kwargs)
+
+    def get_compile(self):
+        return self._compile
