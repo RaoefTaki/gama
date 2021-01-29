@@ -13,11 +13,11 @@ import pygmo as pg
 
 class DEMO:
     """
-    DEMO: Differential Evolution for Multiobjective Optimization.
+    DEMO Algorithm: Differential Evolution for Multiobjective Optimization.
     """
 
-    def __init__(self, nobj: int = 2, ops: OperatorSet = None, primitive_set: DefaultDict = None, _use_non_component: bool = False,
-                 f: float = 0.8):
+    def __init__(self, nobj: int = 2, ops: OperatorSet = None, primitive_set: DefaultDict = None,
+                 use_non_component: bool = True, f: float = 0.8):
         """
         Constructs a DEMO algorithm
 
@@ -26,14 +26,14 @@ class DEMO:
         nobj: the number of dimensions in this multioptimization problem
         ops: the used operators
         primitive_set: the used primitives
-        _use_non_component: whether or not to use non-components (no primitive at a certain index)
+        use_non_component: whether or not to use non-components (no primitive at a certain index)
         f: the scaling factor
         """
         # Define the 'private' data members
         self._nobj = nobj
         self._ops = ops
         self._primitive_set = primitive_set
-        self._use_non_component = _use_non_component
+        self._use_non_component = use_non_component
         self._f = f
 
     def evolve(self, pop):
